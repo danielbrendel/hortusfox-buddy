@@ -8,6 +8,7 @@
 		
 		<title>{{ env('APP_NAME') }}</title>
 
+		<link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}"/>
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/bulma.css') }}"/>
 
 		<script src="{{ asset('js/fontawesome.js') }}"></script>
@@ -15,9 +16,9 @@
 	</head>
 	
 	<body>
-		<div id="main">
+		<main id="main">
 			{%content%}
-		</div>
+		</main>
 
 		<script src="{{ asset('js/app.js') }}"></script>
 		<script>
