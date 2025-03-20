@@ -19,10 +19,10 @@ function success(msg)
     console.log(`\x1b[32m${msg}\x1b[0m`);
 }
 
-function log(guild_id, member_id, content)
+function log(gid, mid, content)
 {
     if (parseInt(process.env.LOG_ENABLE)) {
-        db.query('INSERT INTO history (guild_id, member_id, content) VALUES (?, ?, ?)', [guild_id, member_id, content], (err, results) => {
+        db.query('INSERT INTO history (guild_id, member_id, content) VALUES (?, ?, ?)', [gid, mid, content], (err, results) => {
             if (err) {
                 console.log('Error inserting history entry: ' + err.message);
             }
@@ -54,11 +54,13 @@ async function cmd_admin(interaction)
         return;
     }
 
+    initGuild(interaction.guild.id);
+
     const subcmd = interaction.options.getSubcommand();
 
     try {
         if (subcmd === 'set') {
-            const item = interaction.options.getString('object');
+            const item = interaction.options.getString('item');
             const value = interaction.options.getString('value');
 
             if (item === 'apikey') {
@@ -70,7 +72,9 @@ async function cmd_admin(interaction)
                     }
                 });
             } else if (item === 'recchan') {
-                db.query('UPDATE guilds SET chan_recognition = ? WHERE guild_id = ?', [value, interaction.guild.id], (err, results) => {
+                const channel = interaction.guild.channels.cache.find(c => c.name === value);
+
+                db.query('UPDATE guilds SET chan_recognition = ? WHERE guild_id = ?', [channel.id, interaction.guild.id], (err, results) => {
                     if (err) {
                         interaction.editReply({ content: `❌ Failed to update recognition channel ID: ` + err.message, ephemeral: true });
                     } else {
@@ -81,18 +85,16 @@ async function cmd_admin(interaction)
                 throw new Error('❌ Unknown data item: ' + item);
             }
         } else if (subcmd === 'stats') {
-            db.query('SELECT * FROM history WHERE guild_id = ?', [interaction.guild.id], (err, results) => {
+            db.query('SELECT COUNT(*) AS count_total, COUNT(DISTINCT member_id) AS count_users FROM history WHERE guild_id = ?', [interaction.guild.id], (err, results) => {
                 if (err) {
                     interaction.editReply({ content: `❌ Failed to query history data: ` + err.message, ephemeral: true });
                 } else {
-                    const opcount = results.length;
-                    const usercount = results.length;
+                    const opcount = results[0].count_total;
+                    const usercount = results[0].count_users;
 
                     interaction.editReply({ content: `📊 There have been ${opcount} operations by ${usercount} users performed`, ephemeral: true });
                 }
             });
-
-            interaction.editReply({ content: `Here are some stats!`, ephemeral: true });
         } else {
             throw new Error('❌ Unknown admin command: ' + subcmd);
         }
@@ -157,6 +159,27 @@ function sendChannelMessage(chanId, chanMsg)
     }
 }
 
+function initGuild(guildId)
+{
+    db.query('SELECT * FROM guilds WHERE guild_id = ?', [guildId], async (err, results) => {
+        if (err) {
+            console.log('Error inserting guild ID into database:' + err.message);
+            return;
+        }
+
+        if (results.length == 0) {
+            db.query('INSERT INTO guilds (guild_id) VALUES (?)', [guildId], (err, results) => {
+                if (err) {
+                    console.log('Error inserting guild ID into database:' + err.message);
+                    return;
+                }
+        
+                console.log(`Guild ID ${guildId} inserted into database.`);
+            });
+        }
+    });
+}
+
 client.once('ready', async () => {
     setInterval(() => {
         console.log('TIMER_INTERVAL: ' + process.env.TIMER_INTERVAL);
@@ -166,16 +189,7 @@ client.once('ready', async () => {
 });
 
 client.on('guildCreate', (guild) => {
-    const guildId = guild.id;
-
-    db.query('INSERT INTO guilds (guild_id) VALUES (?)', [guildId], (err, results) => {
-        if (err) {
-            console.log('Error inserting guild ID into database:' + err.message);
-            return;
-        }
-
-        console.log(`Guild ID ${guildId} inserted into database.`);
-    });
+    initGuild(guild.id);
 });
 
 client.on('interactionCreate', async (interaction) => {
