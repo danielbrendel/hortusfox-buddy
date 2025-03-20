@@ -8,8 +8,6 @@ import mysql from 'mysql2';
 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-const FILE_LOG = 'history.log';
-
 function abort(msg)
 {
     console.error(`\x1b[31m${msg}\x1b[0m`);
@@ -21,21 +19,14 @@ function success(msg)
     console.log(`\x1b[32m${msg}\x1b[0m`);
 }
 
-function log(content, timestamp = true)
+function log(guild_id, member_id, content)
 {
     if (parseInt(process.env.LOG_ENABLE)) {
-        if (timestamp) {
-            content = '[' + (new Date).toLocaleString('en-US') + '] ' + content;
-        }
-
-        fs.writeFileSync(
-            path.join(process.cwd(), FILE_LOG),
-            content,
-            {
-                encoding: 'utf8',
-                flag: 'a'
+        db.query('INSERT INTO history (guild_id, member_id, content) VALUES (?, ?, ?)', [guild_id, member_id, content], (err, results) => {
+            if (err) {
+                console.log('Error inserting history entry: ' + err.message);
             }
-        );
+        });
     }
 }
 
@@ -73,7 +64,7 @@ async function cmd_admin(interaction)
             if (item === 'apikey') {
                 db.query('UPDATE guilds SET api_key = ? WHERE guild_id = ?', [value, interaction.guild.id], (err, results) => {
                     if (err) {
-                        interaction.editReply({ content: `❌ Failed to update API key: ` + err, ephemeral: true });
+                        interaction.editReply({ content: `❌ Failed to update API key: ` + err.message, ephemeral: true });
                     } else {
                         interaction.editReply({ content: `✅ Successfully updated API key`, ephemeral: true });
                     }
@@ -81,7 +72,7 @@ async function cmd_admin(interaction)
             } else if (item === 'recchan') {
                 db.query('UPDATE guilds SET chan_recognition = ? WHERE guild_id = ?', [value, interaction.guild.id], (err, results) => {
                     if (err) {
-                        interaction.editReply({ content: `❌ Failed to update recognition channel ID: ` + err, ephemeral: true });
+                        interaction.editReply({ content: `❌ Failed to update recognition channel ID: ` + err.message, ephemeral: true });
                     } else {
                         interaction.editReply({ content: `✅ Successfully updated recognition channel ID`, ephemeral: true });
                     }
@@ -89,6 +80,19 @@ async function cmd_admin(interaction)
             } else {
                 throw new Error('❌ Unknown data item: ' + item);
             }
+        } else if (subcmd === 'stats') {
+            db.query('SELECT * FROM history WHERE guild_id = ?', [interaction.guild.id], (err, results) => {
+                if (err) {
+                    interaction.editReply({ content: `❌ Failed to query history data: ` + err.message, ephemeral: true });
+                } else {
+                    const opcount = results.length;
+                    const usercount = results.length;
+
+                    interaction.editReply({ content: `📊 There have been ${opcount} operations by ${usercount} users performed`, ephemeral: true });
+                }
+            });
+
+            interaction.editReply({ content: `Here are some stats!`, ephemeral: true });
         } else {
             throw new Error('❌ Unknown admin command: ' + subcmd);
         }
@@ -105,13 +109,8 @@ const commands = [
         handler: cmd_info
     },
     {
-        name: 'stats',
-        description: 'Show current GitHub repository statistics',
-        handler: cmd_stats
-    },
-    {
         name: 'admin',
-        description: 'Perform admin operation',
+        description: 'Perform admin operations',
         handler: cmd_admin
     }
 ];
@@ -121,7 +120,7 @@ function handleCommand(interaction)
     for (let i = 0; i < commands.length; i++) {
         if (interaction.commandName === commands[i].name) {
             commands[i].handler(interaction);
-            log(`${interaction.user.username} has issued the command /${interaction.commandName}\n`);
+            log(interaction.guild.id, interaction.member.id, `${interaction.user.username} has issued the command /${interaction.commandName}`);
         }
     }
 }
@@ -171,11 +170,11 @@ client.on('guildCreate', (guild) => {
 
     db.query('INSERT INTO guilds (guild_id) VALUES (?)', [guildId], (err, results) => {
         if (err) {
-            log('Error inserting guild ID into database:' + err);
+            console.log('Error inserting guild ID into database:' + err.message);
             return;
         }
 
-        log(`Guild ID ${guildId} inserted into database.`);
+        console.log(`Guild ID ${guildId} inserted into database.`);
     });
 });
 
@@ -243,6 +242,8 @@ client.on('messageCreate', async (message) => {
                             if (fs.existsSync(finalImagePath)) {
                                 fs.unlinkSync(finalImagePath);
                             }
+
+                            log(guildId, message.author.id, `${message.author.username} has issued a plant recognition operation`);
                         }
                     }
                 }
@@ -250,9 +251,9 @@ client.on('messageCreate', async (message) => {
         });
     } catch (err) {
         if (reply) {
-            await reply.edit('❌ Error: ' + err);
+            await reply.edit('❌ Error: ' + err.message);
         } else {
-            log(err);
+            console.log(err);
         }
     }
 });

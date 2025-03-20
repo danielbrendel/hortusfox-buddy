@@ -7,11 +7,8 @@ const commands = [
         .setName('info')
         .setDescription('Get some infos'),
     new SlashCommandBuilder()
-        .setName('stats')
-        .setDescription('Get some stats'),
-    new SlashCommandBuilder()
         .setName('admin')
-        .setDescription('Perform admin operation')
+        .setDescription('Perform admin operations')
         .addSubcommand(subcmd => 
             subcmd.setName('set')
                 .setDescription('Stores guild specific data')
@@ -25,6 +22,10 @@ const commands = [
                     .setDescription('The value to be stored')
                     .setRequired(true)
                 )
+        )
+        .addSubcommand(subcmd => 
+            subcmd.setName('stats')
+                .setDescription('Shows usage statistics for your server')
         )
 ]
 .map(command => command.toJSON());
