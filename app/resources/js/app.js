@@ -39,5 +39,12 @@ window.vue = new Vue({
                     }
                 );
         },
+
+        scrollTo: function(target) {
+            let elem = document.querySelector(target);
+            if (elem) {
+                elem.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
     }
 });

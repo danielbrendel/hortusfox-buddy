@@ -6,8 +6,8 @@
             <h2>{{ env('APP_DESCRIPTION') }}</h2>
 
             <div class="header-actions">
-                <span><a class="button is-warning is-large is-rounded is-outlined" href="#documentation">Documentation</a></span>
-                <span><a class="button is-info is-large is-rounded is-outlined" href="{{ env('APP_INVITELINK') }}">Install to Server</a></span>
+                <span><a class="button is-warning is-large is-rounded is-outlined" href="javascript:void(0);" onclick="window.vue.scrollTo('a[name=documentation]');">Documentation</a></span>
+                <span><a class="button is-info is-large is-rounded is-outlined" href="{{ env('APP_INVITELINK') }}">Add to Server</a></span>
             </div>
 
             <div class="header-info">

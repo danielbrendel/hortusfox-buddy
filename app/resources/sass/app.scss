@@ -6,6 +6,7 @@ html, body {
     width: 100%;
     padding: 0;
     margin: 0;
+    overflow-x: hidden;
     background-color: rgb(111, 163, 93);
 }
 
@@ -39,6 +40,9 @@ html, body {
 
 .header-content h1 {
     font-size: 3.5em;
+    @media screen and (max-width: 768px) {
+        font-size: 2.6em;
+    }
     color: rgb(230, 230, 230);
     margin-bottom: 10px;
 }
@@ -52,6 +56,9 @@ html, body {
 
 .header-content h2 {
     font-size: 2.5em;
+    @media screen and (max-width: 768px) {
+        font-size: 1.7em;
+    }
     color: rgb(200, 200, 200);
     margin-bottom: 35px;
 }
@@ -71,6 +78,9 @@ html, body {
 
 .header-info {
     font-size: 1.0em;
+    @media screen and (max-width: 768px) {
+        font-size: 0.9em;
+    }
     color: rgb(200, 200, 200);
 }
 
@@ -94,7 +104,10 @@ html, body {
 
 .features h2 {
     color: rgb(255, 255, 255);
-    font-size: 1.5em;
+    font-size: 2.5em;
+    @media screen and (max-width: 768px) {
+        font-size: 1.9em;
+    }
     padding-left: 20px;
 }
 
@@ -145,11 +158,18 @@ html, body {
     margin-top: 60px;
     margin-bottom: 45px;
     text-align: left;
+    @media screen and (max-width: 768px) {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
 }
 
 .documentation h2 {
     color: rgb(255, 255, 255);
-    font-size: 1.5em;
+    font-size: 2.5em;
+    @media screen and (max-width: 768px) {
+        font-size: 1.9em;
+    }
     padding-left: 20px;
 }
 

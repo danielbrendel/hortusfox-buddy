@@ -20,6 +20,8 @@
 </div>
 
 <div class="documentation">
+    <a name="documentation"></a>
+
     <h2><i class="fas fa-caret-square-right"></i> How does it work?</h2>
 
     <ol>
