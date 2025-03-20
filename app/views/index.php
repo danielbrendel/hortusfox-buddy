@@ -1,0 +1,1 @@
+HortusBuddy - A Discord Bot for Plant Enthusiasts
