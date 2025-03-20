@@ -6,7 +6,7 @@
 		<meta name="description" content="{{ env('APP_DESCRIPTION') }}">
 		<meta name="author" content="{{ env('APP_AUTHOR') }}">
 		
-		<title>{{ env('APP_NAME') }}</title>
+		<title>{{ env('APP_NAME') }}: {{ env('APP_DESCRIPTION') }}</title>
 
 		<link rel="icon" type="image/png" href="{{ asset('img/logo.png') }}"/>
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/bulma.css') }}"/>
@@ -17,7 +17,21 @@
 	
 	<body>
 		<main id="main">
-			{%content%}
+			@include('header.php')
+
+			<div class="container">
+                <div class="columns">
+                    <div class="column is-2"></div>
+
+                    <div class="column is-8">
+                        {%content%}
+                    </div>
+
+                    <div class="column is-2"></div>
+                </div>
+            </div>
+
+			@include('footer.php')
 		</main>
 
 		<script src="{{ asset('js/app.js') }}"></script>

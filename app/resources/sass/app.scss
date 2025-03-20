@@ -81,3 +81,134 @@ html, body {
 .header-info a:hover {
     color: rgb(123, 223, 95);
 }
+
+.features {
+    position: relative;
+    display: table;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: 60px;
+    margin-bottom: 45px;
+    text-align: left;
+}
+
+.features h2 {
+    color: rgb(255, 255, 255);
+    font-size: 1.5em;
+    padding-left: 20px;
+}
+
+.features h2 i {
+    color: #ffff2f;
+}
+
+.feature-list {
+    text-align: center;
+    margin-top: 45px;
+}
+
+.feature-item {
+    position: relative;
+    display: inline-block;
+    width: 190px;
+    @media screen and (max-width: 768px) {
+        width: 250px;
+    }
+    height: 150px;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 15px;
+    padding-top: 30px;
+    padding-bottom: 50px;
+    background-color: rgb(95, 145, 63);
+    color: rgb(230, 230, 230);
+    border-radius: 12px;
+    border-left: 3px solid #2cff00;
+    box-shadow: 0 4px 2px 0 rgba(0, 0, 0, 0.2), 0 6px 10px 0 rgba(0, 0, 0, 0.19);
+    font-size: 1.0em;
+    text-align: center;
+}
+
+.feature-item-icon {
+    padding-bottom: 5px;
+}
+
+.feature-item-info {
+    padding-top: 5px;
+}
+
+.documentation {
+    position: relative;
+    display: table;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: 60px;
+    margin-bottom: 45px;
+    text-align: left;
+}
+
+.documentation h2 {
+    color: rgb(255, 255, 255);
+    font-size: 1.5em;
+    padding-left: 20px;
+}
+
+.documentation h2 i {
+    color: #34fbfb;
+}
+
+.documentation ol {
+    color: rgb(255, 255, 255);
+    padding-left: 40px;
+    margin-top: 20px;
+}
+
+.documentation li {
+    margin-bottom: 25px;
+}
+
+.documentation li strong {
+    color: rgb(255, 255, 255);
+}
+
+.documentation li a {
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.page-footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    padding: 20px;
+    @media screen and (min-width: 768px) {
+        padding-top: 50px;
+        padding-bottom: 50px;
+    }
+    background-color: rgb(76, 145, 67);
+    color: rgb(220, 220, 220);
+}
+
+.page-footer a {
+    color: rgb(255, 255, 255);
+}
+
+.page-footer a:hover {
+    color: rgb(255, 255, 255);
+    text-decoration: underline;
+}
+
+.page-footer span {
+    margin-left: 10px;
+}
+
+.is-desktop-right {
+    @media screen and (min-width: 768px) {
+        text-align: right;
+    }
+}
+
+.is-margin-bottom-10 {
+    margin-bottom: 10px;
+}
