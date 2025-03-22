@@ -4,8 +4,8 @@ import 'dotenv/config';
 
 const commands = [
     new SlashCommandBuilder()
-        .setName('info')
-        .setDescription('Get some infos'),
+        .setName('hortusbuddy')
+        .setDescription('Get information about the HortusBuddy Bot'),
     new SlashCommandBuilder()
         .setName('guess')
         .setDescription('Guess the current appeared plant')

@@ -37,7 +37,7 @@ function log(gid, mid, content)
 function cmd_info(interaction)
 {
     interaction.reply({
-        content: "This is an info message",
+        content: "🤖 HortusBuddy\nA Discord Bot for Plant Enthusiasts\n⚡Powered by HortusFox: https://www.hortusfox.com\n🌱 HortusFox is a selfhosted, collaborative management app for indoor and outdoor plants!",
         ephemeral: true
     });
 }
@@ -165,8 +165,8 @@ async function cmd_admin(interaction)
 
 const commands = [
     {
-        name: 'info',
-        description: 'Show Info',
+        name: 'hortusbuddy',
+        description: 'Get information about the HortusBuddy Bot',
         handler: cmd_info
     },
     {
@@ -180,8 +180,8 @@ const commands = [
         handler: cmd_plantscore
     },
     {
-        name: 'admin',
-        description: 'Perform admin operations',
+        name: 'hfbud',
+        description: 'Perform HortusBuddy specific admin operations',
         handler: cmd_admin
     }
 ];
