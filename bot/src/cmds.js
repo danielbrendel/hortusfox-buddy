@@ -18,8 +18,8 @@ const commands = [
         .setName('plantscore')
         .setDescription('Get your current game score'),
     new SlashCommandBuilder()
-        .setName('admin')
-        .setDescription('Perform admin operations')
+        .setName('hfbud')
+        .setDescription('Perform HortusBuddy specific admin operations')
         .addSubcommand(subcmd => 
             subcmd.setName('set')
                 .setDescription('Stores guild specific data')
