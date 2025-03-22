@@ -5,8 +5,12 @@ import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
 import mysql from 'mysql2';
+import Game from './game.js';
 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
+var game = null;
+var interval = null;
 
 function abort(msg)
 {
@@ -38,11 +42,18 @@ function cmd_info(interaction)
     });
 }
 
-async function cmd_stats(interaction)
+async function cmd_guess(interaction)
 {
     await interaction.deferReply();
 
-    interaction.editReply(`Stats go here`);
+    game.guess(interaction);
+}
+
+async function cmd_plantscore(interaction)
+{
+    await interaction.deferReply();
+
+    game.memberPoints(interaction);
 }
 
 async function cmd_admin(interaction)
@@ -66,9 +77,9 @@ async function cmd_admin(interaction)
             if (item === 'apikey') {
                 db.query('UPDATE guilds SET api_key = ? WHERE guild_id = ?', [value, interaction.guild.id], (err, results) => {
                     if (err) {
-                        interaction.editReply({ content: `❌ Failed to update API key: ` + err.message, ephemeral: true });
+                        interaction.editReply({ content: `❌ Failed to update API key: ` + err.message, ephemeral: false });
                     } else {
-                        interaction.editReply({ content: `✅ Successfully updated API key`, ephemeral: true });
+                        interaction.editReply({ content: `✅ Successfully updated API key`, ephemeral: false });
                     }
                 });
             } else if (item === 'recchan') {
@@ -76,30 +87,78 @@ async function cmd_admin(interaction)
 
                 db.query('UPDATE guilds SET chan_recognition = ? WHERE guild_id = ?', [channel.id, interaction.guild.id], (err, results) => {
                     if (err) {
-                        interaction.editReply({ content: `❌ Failed to update recognition channel ID: ` + err.message, ephemeral: true });
+                        interaction.editReply({ content: `❌ Failed to update recognition channel ID: ` + err.message, ephemeral: false });
                     } else {
-                        interaction.editReply({ content: `✅ Successfully updated recognition channel ID`, ephemeral: true });
+                        interaction.editReply({ content: `✅ Successfully updated recognition channel ID`, ephemeral: false });
+                    }
+                });
+            } else if (item === 'gamechan') {
+                const channel = interaction.guild.channels.cache.find(c => c.name === value);
+
+                db.query('UPDATE guilds SET chan_guessgame = ? WHERE guild_id = ?', [channel.id, interaction.guild.id], (err, results) => {
+                    if (err) {
+                        interaction.editReply({ content: `❌ Failed to update game channel ID: ` + err.message, ephemeral: false });
+                    } else {
+                        interaction.editReply({ content: `✅ Successfully updated game channel ID`, ephemeral: false });
                     }
                 });
             } else {
                 throw new Error('❌ Unknown data item: ' + item);
             }
+        } else if (subcmd === 'game') {
+            const operation = interaction.options.getString('operation');
+
+            if (operation === 'start') {
+                if (!interval) {
+                    db.query('SELECT * FROM `guilds` WHERE guild_id = ?', [interaction.guild.id], (err, results) => {
+                        if (!err) {
+                            const gameChannel = results[0].chan_guessgame;
+                            if ((!gameChannel) || (gameChannel.length == 0)) {
+                                interaction.editReply({ content: `❌ No game channel was set. Please set one before starting the game.`, ephemeral: false });
+                                return;
+                            }
+
+                            game.setGameChan(gameChannel);
+                            game.setGameStatus(true);
+
+                            interval = setInterval(() => {
+                                gameLoop();
+                            }, process.env.TIMER_INTERVAL);
+
+                            interaction.editReply({ content: `✅ Game has been started`, ephemeral: false });
+                        } else {
+                            interaction.editReply({ content: `❌ Error fetching data: ` + err.message, ephemeral: false });
+                        }
+                    });
+                } else {
+                    interaction.editReply({ content: `Game is already started`, ephemeral: false });
+                }
+            } else if (operation === 'stop') {
+                game.setGameStatus(false);
+                clearInterval(interval);
+                interaction.editReply({ content: `✅ Game has been stopped`, ephemeral: false });
+            } else if (operation === 'leaderboard') {
+                game.leaderboard(interaction.guild.id);
+                interaction.editReply({ content: `✅ Leaderboard has been published`, ephemeral: false });
+            } else {
+                throw new Error('❌ Unknown operation: ' + operation);
+            }
         } else if (subcmd === 'stats') {
             db.query('SELECT COUNT(*) AS count_total, COUNT(DISTINCT member_id) AS count_users FROM history WHERE guild_id = ?', [interaction.guild.id], (err, results) => {
                 if (err) {
-                    interaction.editReply({ content: `❌ Failed to query history data: ` + err.message, ephemeral: true });
+                    interaction.editReply({ content: `❌ Failed to query history data: ` + err.message, ephemeral: false });
                 } else {
                     const opcount = results[0].count_total;
                     const usercount = results[0].count_users;
 
-                    interaction.editReply({ content: `📊 There have been ${opcount} operations by ${usercount} users performed`, ephemeral: true });
+                    interaction.editReply({ content: `📊 There have been ${opcount} operations by ${usercount} users performed`, ephemeral: false });
                 }
             });
         } else {
             throw new Error('❌ Unknown admin command: ' + subcmd);
         }
     } catch (err) {
-        interaction.editReply({ content: err.message, ephemeral: true });
+        interaction.editReply({ content: err.message, ephemeral: false });
         return;
     }
 }
@@ -109,6 +168,16 @@ const commands = [
         name: 'info',
         description: 'Show Info',
         handler: cmd_info
+    },
+    {
+        name: 'guess',
+        description: 'Guess the current appeared plant',
+        handler: cmd_guess
+    },
+    {
+        name: 'plantscore',
+        description: 'Get your current game score',
+        handler: cmd_plantscore
     },
     {
         name: 'admin',
@@ -151,11 +220,10 @@ db.connect(err => {
     success('Connected to database!');
 });
 
-function sendChannelMessage(chanId, chanMsg)
+function gameLoop()
 {
-    const channel = client.channels.cache.get(chanId);
-    if (channel) {
-        channel.send(chanMsg);
+    if (game) {
+        game.acquirePlant();
     }
 }
 
@@ -181,9 +249,7 @@ function initGuild(guildId)
 }
 
 client.once('ready', async () => {
-    setInterval(() => {
-        console.log('TIMER_INTERVAL: ' + process.env.TIMER_INTERVAL);
-    }, process.env.TIMER_INTERVAL);
+    game = new Game(client, db);
     
     success(`Logged in: ${client.user.tag}. Bot is now ready.`);
 });

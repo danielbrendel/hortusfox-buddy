@@ -7,6 +7,17 @@ const commands = [
         .setName('info')
         .setDescription('Get some infos'),
     new SlashCommandBuilder()
+        .setName('guess')
+        .setDescription('Guess the current appeared plant')
+        .addStringOption(option =>
+            option.setName('name')
+            .setDescription('The assumed name of the plant')
+            .setRequired(true)
+        ),
+    new SlashCommandBuilder()
+        .setName('plantscore')
+        .setDescription('Get your current game score'),
+    new SlashCommandBuilder()
         .setName('admin')
         .setDescription('Perform admin operations')
         .addSubcommand(subcmd => 
@@ -20,6 +31,15 @@ const commands = [
                 .addStringOption(option => 
                     option.setName('value')
                     .setDescription('The value to be stored')
+                    .setRequired(true)
+                )
+        )
+        .addSubcommand(subcmd => 
+            subcmd.setName('game')
+                .setDescription('Game specific operations')
+                .addStringOption(option => 
+                    option.setName('operation')
+                    .setDescription('Either start or stop as game status, or leaderboard to show the current top scores')
                     .setRequired(true)
                 )
         )
