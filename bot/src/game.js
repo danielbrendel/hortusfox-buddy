@@ -1,12 +1,14 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { AttachmentBuilder } from 'discord.js';
+import { randomUUID } from 'crypto';
 
 export default class Game {
     client = null;
     sql = null;
     gameChan = null;
     currentPlant = null;
+    currentSession = null;
     gameStatus = false;
 
     constructor(client, db, channel = null)
@@ -15,6 +17,7 @@ export default class Game {
         this.sql = db;
         this.gameChan = channel;
         this.currentPlant = null;
+        this.currentSession = null;
         this.gameStatus = false;
     }
 
@@ -47,6 +50,7 @@ export default class Game {
         this.sql.query('SELECT * FROM `plants` ORDER BY RAND() LIMIT 1', [], (err, results) => {
             if (results.length == 1) {
                 this.currentPlant = results[0];
+                this.currentSession = randomUUID();
 
                 const channel = this.client.channels.cache.get(this.gameChan);
                 if (channel) {
@@ -69,15 +73,21 @@ export default class Game {
         const plantName = interaction.options.getString('name');
 
         if (plantName.toLowerCase().trim() == this.currentPlant.name.toLowerCase().trim()) {
-            this.sql.query('SELECT * FROM `scores` WHERE member_id = ? AND guild_id = ?', [interaction.member.id, interaction.guild.id], (err, results) => {
+            this.sql.query('SELECT * FROM `guesses` WHERE member_id = ? AND guild_id = ? AND session_id = ?', [interaction.member.id, interaction.guild.id, this.currentSession], (err, results) => {
                 if (results.length == 0) {
-                    this.sql.query('INSERT INTO `scores` (guild_id, member_id, points) VALUES(?, ?, 0)', [interaction.guild.id, interaction.member.id], (err, results) => {});
+                    this.sql.query('SELECT * FROM `scores` WHERE member_id = ? AND guild_id = ?', [interaction.member.id, interaction.guild.id], (err, results) => {
+                        if (results.length == 0) {
+                            this.sql.query('INSERT INTO `scores` (guild_id, member_id, points) VALUES(?, ?, 0)', [interaction.guild.id, interaction.member.id], (err, results) => {});
+                            this.updatePoints(interaction);
+                            return;
+                        }
+                    });
+        
                     this.updatePoints(interaction);
-                    return;
+                } else {
+                    interaction.editReply(`😏 Hey, you've already scored for this plant!`);
                 }
             });
-
-            this.updatePoints(interaction);
         } else {
             interaction.editReply(`🥲 Oops! You guessed wrong!`);
         }
@@ -88,6 +98,8 @@ export default class Game {
         this.sql.query('UPDATE `scores` SET points = points + ? WHERE member_id = ? AND guild_id = ?', [this.currentPlant.points, interaction.member.id, interaction.guild.id], (err, results) => {
             interaction.editReply(`🎯 Correct! You earned +${this.currentPlant.points} points!`);
         });
+
+        this.sql.query('INSERT INTO `guesses` (guild_id, member_id, session_id) VALUES(?, ?, ?)', [interaction.guild.id, interaction.member.id, this.currentSession], (err, results) => {});
     }
 
     memberPoints(interaction)
